@@ -1,0 +1,50 @@
+package Routes
+
+import (
+	getcollection "CRUD_API/Collection"
+	database "CRUD_API/databases"
+	model "CRUD_API/model"
+	"context"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
+	"net/http"
+	"time"
+)
+
+func CreatePost(c *gin.Context) {
+	var DB = database.ConnectDB()
+	var userCollection = getcollection.GetCollection(DB, "Users")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	user := new(model.Users)
+	defer cancel()
+
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err})
+		log.Fatal(err)
+		return
+	}
+
+	userPayload := model.Users{
+		ID:   primitive.NewObjectID(),
+		Name: user.Name,
+		Age:  user.Age,
+	}
+
+	result, err := userCollection.InsertOne(ctx, userPayload)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err})
+		return
+	}
+
+	createdUser := model.Users{}
+	err = userCollection.FindOne(ctx, bson.M{"_id": result.InsertedID}).Decode(&createdUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Posted successfully", "Data": createdUser})
+}
