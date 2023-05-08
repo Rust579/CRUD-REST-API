@@ -6,6 +6,8 @@ import (
 )
 
 func main() {
+	//gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 
 	router.POST("/", routes.CreatePost)
@@ -17,10 +19,10 @@ func main() {
 	router.PUT("/update/:userId", routes.UpdatePost)
 
 	// called as localhost:3000/delete/{id}
-	router.DELETE("/delete/:userId", routes.DeletePost)
+	router.DELETE("delete/:userId", routes.DeletePost)
 
-	// called as localhost:3000/getall
-	router.GET("get/", routes.ReadAllUsers)
+	// called as localhost:3000/getAll
+	router.GET("getAll/", routes.ReadAllUsers)
 
-	router.Run(":3000")
+	router.Run("localhost:8080")
 }
